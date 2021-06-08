@@ -1,0 +1,59 @@
+inkling "2.0"
+
+using Goal
+
+# シミュレータからの出力値
+type SimState{
+    # 逃げる駒の座標
+    run_position_x:number,
+    run_position_y:number,
+    
+    # 追う駒の座標
+    catch_position_x:number,
+    catch_position_y:number,
+    
+    # 2点間の距離
+    distance:number
+}
+
+# シミュレータへの入力値
+type SimAction{
+
+    # 追う駒の移動方向
+    catch_position_x:number<-1, 0, 1>,
+    catch_position_y:number<-1, 0, 1>
+}
+
+# 環境設定（未使用）
+#type SimConfig{
+#    # 逃げる駒の初期位置
+#    run_position_x: number,
+#    run_position_y: number,
+#
+#    # 追いかける駒の初期位置
+#    catch_position_x: number,
+#    catch_position_y: number
+#}
+
+# Define a concept graph
+graph (input: SimState): SimAction {
+    concept CatchAndRun(input): SimAction {
+        curriculum {
+            
+            source simulator(Action: SimAction):SimState{
+                package "catchandrun"                     
+            }
+
+            # サイクル回数は50回とする
+            training{
+                EpisodeIterationLimit:50
+            }
+
+            # 駒の距離が1以下になれば終了
+            goal (state: SimState){
+                reach `catch`:
+                    state.distance in  Goal.RangeBelow(1)
+            }
+        }
+    }
+}
